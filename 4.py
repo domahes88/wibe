@@ -38,7 +38,7 @@ import tempfile
 import glob
 import subprocess
 import datetime as _dt
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from threading import Thread, Event
 from typing import Callable, Tuple, Optional, List
 
@@ -720,45 +720,12 @@ def render_batch(audio_paths: List[str], base_settings: RenderSettings, merge: b
 
     # Render each track with identical visual settings
     for ap in audio_paths:
-        s = base_settings
-        s = RenderSettings(
-            audio_path=ap,
-            out_dir=base_settings.out_dir,
-            resolution=base_settings.resolution,
-            fps=base_settings.fps,
-            style=base_settings.style,
-            palette=base_settings.palette,
-            background=base_settings.background,
-            quality=base_settings.quality,
-            glow=base_settings.glow,
-            glow_intensity=base_settings.glow_intensity,
-            blur=base_settings.blur,
-            blur_amount=base_settings.blur_amount,
-            particles=base_settings.particles,
-            particle_count=base_settings.particle_count,
-            mirror=base_settings.mirror,
-            beat_react=base_settings.beat_react,
-            logo_text=base_settings.logo_text,
-            bitrate=base_settings.bitrate,
-            codec=base_settings.codec,
-            draft_start=base_settings.draft_start,
-            draft_duration=base_settings.draft_duration,
-            progress_bar=base_settings.progress_bar,
-            progress_pos=base_settings.progress_pos,
-            progress_height=base_settings.progress_height,
-            progress_countdown=base_settings.progress_countdown,
-            clock=base_settings.clock,
-            clock_mode=base_settings.clock_mode,
-            clock_style=base_settings.clock_style,
-            clock_pos=base_settings.clock_pos,
-            clock_scale=base_settings.clock_scale,
-        )
-        out_path = render_video(s)
+        settings_for_track = replace(base_settings, audio_path=ap)
+        out_path = render_video(settings_for_track)
         outs.append(out_path)
         titles.append(os.path.splitext(os.path.basename(ap))[0])
         try:
-            y, sr = librosa.load(ap, sr=22050, mono=True)
-            dur = float(len(y))/sr
+            dur = float(librosa.get_duration(path=ap))
         except Exception:
             dur = 0.0
         durations.append(dur)
